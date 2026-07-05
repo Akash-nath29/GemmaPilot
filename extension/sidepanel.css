@@ -1,0 +1,252 @@
+/* GemmaPilot — glass-cockpit side panel.
+   Signature: a vertical flight-path rail with glowing waypoint nodes; the agent
+   traces an ordered sequence of steps down it. Amber = caution (the gate). */
+
+:root {
+  /* deck (navy, not the generic black) */
+  --void: #070b14;
+  --deck: #0d1522;
+  --deck-2: #131e31;
+  --deck-3: #17243b;
+  --edge: #243149;
+  --edge-soft: #1a2740;
+
+  /* readouts */
+  --ink: #e9f0ff;
+  --sub: #a8b6d6;
+  --muted: #62729a;
+
+  /* instrument accents */
+  --jet: #5b9dff;      /* primary — sky */
+  --jet-2: #8bb8ff;
+  --go: #4fe0a0;       /* executed / cleared */
+  --amber: #ffb64d;    /* caution / gate */
+  --stop: #ff6b6b;     /* deny / fault */
+
+  --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "JetBrains Mono", "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+
+  --rail-w: 26px;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  background:
+    radial-gradient(120% 60% at 85% -10%, rgba(91, 157, 255, 0.12), transparent 60%),
+    radial-gradient(80% 40% at 0% 0%, rgba(79, 224, 160, 0.05), transparent 55%),
+    var(--void);
+}
+
+/* shared type devices */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+}
+.eyebrow--jet { color: var(--jet); }
+.eyebrow--amber { color: var(--amber); }
+code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  background: var(--deck-3);
+  border: 1px solid var(--edge-soft);
+  padding: 0.5px 6px;
+  border-radius: 6px;
+  color: var(--jet-2);
+}
+
+/* ---------- flight deck (header) ---------- */
+.deck {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 16px;
+  background: linear-gradient(180deg, var(--deck-2), var(--deck));
+  border-bottom: 1px solid var(--edge);
+}
+.mark { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mark__glyph { color: var(--jet); display: grid; place-items: center; filter: drop-shadow(0 0 8px rgba(91,157,255,0.5)); }
+.mark__text { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
+.mark__name { font-weight: 700; font-size: 16px; letter-spacing: 0.2px; }
+.mark__accent { color: var(--jet); }
+.mark__tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+
+.status {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 5px 10px; border-radius: 999px;
+  border: 1px solid var(--edge); background: rgba(0,0,0,0.2); color: var(--muted);
+  white-space: nowrap;
+}
+.status__dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.status--off { color: var(--muted); }
+.status--on  { color: var(--go);  border-color: color-mix(in srgb, var(--go) 40%, var(--edge)); }
+.status--busy{ color: var(--amber); border-color: color-mix(in srgb, var(--amber) 40%, var(--edge)); }
+.status--err { color: var(--stop); border-color: color-mix(in srgb, var(--stop) 45%, var(--edge)); }
+.status--busy .status__dot { animation: breathe 1.3s ease-in-out infinite; }
+.status--on  .status__dot { box-shadow: 0 0 9px currentColor; }
+
+/* ---------- telemetry feed ---------- */
+.log {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 8px 16px 16px;
+  scrollbar-width: thin; scrollbar-color: var(--edge) transparent;
+}
+.log::-webkit-scrollbar { width: 8px; }
+.log::-webkit-scrollbar-thumb { background: var(--edge); border-radius: 8px; }
+
+/* pre-flight / empty state */
+.preflight { padding: 18px 2px; }
+.preflight__title { font-size: 22px; font-weight: 700; letter-spacing: -0.2px; margin: 10px 0 8px; }
+.preflight__body { color: var(--sub); margin: 0 0 20px; }
+.preflight__label { margin-bottom: 10px; }
+.chips { display: flex; flex-direction: column; gap: 8px; }
+.chip {
+  text-align: left; cursor: pointer; font: inherit; color: var(--ink);
+  background: linear-gradient(180deg, var(--deck-2), var(--deck));
+  border: 1px solid var(--edge); border-radius: 11px; padding: 11px 13px;
+  transition: border-color .15s ease, transform .12s ease, background .15s ease;
+}
+.chip::before { content: "›"; color: var(--jet); font-family: var(--mono); margin-right: 8px; }
+.chip:hover { border-color: color-mix(in srgb, var(--jet) 55%, var(--edge)); transform: translateX(2px); }
+
+/* ---------- flight-path entries ---------- */
+.entry {
+  display: grid;
+  grid-template-columns: var(--rail-w) 1fr;
+  column-gap: 10px;
+  animation: waypoint-in .28s cubic-bezier(.2,.7,.3,1) both;
+}
+.entry__rail { position: relative; }
+/* the continuous flight path */
+.entry__rail::before {
+  content: ""; position: absolute; left: 50%; top: 0; bottom: 0;
+  width: 2px; transform: translateX(-50%);
+  background: linear-gradient(var(--edge), var(--edge));
+}
+.entry:first-child .entry__rail::before { top: 14px; }
+.entry:last-child .entry__rail::before { bottom: auto; height: 16px; }
+.entry__node {
+  position: absolute; left: 50%; top: 9px; transform: translateX(-50%);
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--node, var(--muted));
+  border: 2px solid var(--deck);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--node, var(--muted)) 22%, transparent),
+              0 0 10px color-mix(in srgb, var(--node, var(--muted)) 60%, transparent);
+}
+.entry__body { min-width: 0; padding: 4px 0 16px; }
+.entry__eyebrow { margin-bottom: 3px; }
+.entry__kind {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--node, var(--muted));
+}
+.entry__head { margin: 0; font-size: 14px; word-break: break-word; }
+.entry__head b { font-weight: 700; }
+.entry__sub { margin: 3px 0 0; font-size: 12.5px; color: var(--sub); word-break: break-word; }
+
+/* entry variants set --node + emphasis */
+.entry--task   { --node: var(--jet); }
+.entry--observe{ --node: var(--muted); }
+.entry--observe .entry__head { color: var(--sub); font-size: 12.5px; }
+.entry--plan   { --node: var(--jet); }
+.entry--act    { --node: var(--go); }
+.entry--warn   { --node: var(--amber); }
+.entry--stop   { --node: var(--stop); }
+.entry--done   { --node: var(--jet-2); }
+
+.task-card {
+  margin-top: 2px; padding: 10px 12px; border-radius: 11px;
+  background: linear-gradient(180deg, rgba(91,157,255,0.16), rgba(91,157,255,0.06));
+  border: 1px solid color-mix(in srgb, var(--jet) 40%, var(--edge));
+  font-weight: 600;
+}
+.result-card {
+  margin-top: 2px; padding: 11px 13px; border-radius: 11px;
+  background: linear-gradient(180deg, rgba(79,224,160,0.12), rgba(79,224,160,0.03));
+  border: 1px solid color-mix(in srgb, var(--go) 38%, var(--edge));
+}
+
+/* ---------- safety gate ---------- */
+.gate {
+  margin: 0 12px 10px;
+  padding: 13px 14px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--amber) 55%, var(--edge));
+  background:
+    radial-gradient(120% 100% at 50% 0%, rgba(255,182,77,0.16), transparent 70%),
+    var(--deck-2);
+  box-shadow: 0 -6px 26px rgba(255,182,77,0.12), 0 0 0 1px rgba(255,182,77,0.08) inset;
+  animation: gate-in .32s cubic-bezier(.2,.7,.3,1) both;
+}
+.gate__title { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
+.gate__chevron { font-size: 12px; }
+.gate__reason { margin: 0; font-size: 13px; color: var(--ink); }
+.gate__target {
+  margin-top: 8px; font-family: var(--mono); font-size: 11.5px; color: var(--amber);
+  background: rgba(0,0,0,0.28); border: 1px solid var(--edge-soft);
+  border-radius: 8px; padding: 6px 9px; word-break: break-word;
+}
+.gate__actions { display: flex; gap: 8px; margin-top: 12px; }
+
+/* ---------- composer ---------- */
+.composer {
+  display: flex; align-items: flex-end; gap: 8px;
+  padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--edge);
+  background: linear-gradient(0deg, var(--deck-2), var(--deck));
+}
+.composer__input {
+  flex: 1; resize: none; font: inherit; color: var(--ink);
+  background: var(--void); border: 1px solid var(--edge); border-radius: 12px;
+  padding: 11px 13px; max-height: 132px; line-height: 1.45;
+  scrollbar-width: thin;
+}
+.composer__input::placeholder { color: var(--muted); }
+.composer__input:focus-visible { outline: none; border-color: var(--jet); box-shadow: 0 0 0 3px rgba(91,157,255,0.22); }
+.composer__send {
+  flex: none; width: 42px; height: 42px; border-radius: 12px; cursor: pointer;
+  display: grid; place-items: center; border: none; color: #06122b;
+  background: linear-gradient(150deg, var(--jet-2), var(--jet));
+  box-shadow: 0 4px 14px rgba(91,157,255,0.35);
+  transition: transform .12s ease, filter .15s ease, box-shadow .15s ease;
+}
+.composer__send:hover:not(:disabled) { filter: brightness(1.07); transform: translateY(-1px); }
+.composer__send:active:not(:disabled) { transform: translateY(0); }
+.composer__send:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; filter: grayscale(0.3); }
+
+/* buttons */
+.btn {
+  flex: 1; cursor: pointer; font: inherit; font-weight: 700; font-size: 13px;
+  border: 1px solid transparent; border-radius: 10px; padding: 11px 14px;
+  transition: filter .15s ease, transform .12s ease;
+}
+.btn:hover { filter: brightness(1.06); }
+.btn:active { transform: translateY(1px); }
+.btn--go { background: linear-gradient(150deg, #7ff0bd, var(--go)); color: #043524; }
+.btn--stop { background: transparent; border-color: color-mix(in srgb, var(--stop) 70%, transparent); color: var(--stop); }
+.btn--stop:hover { background: rgba(255,107,107,0.1); filter: none; }
+
+:focus-visible { outline: 2px solid var(--jet); outline-offset: 2px; border-radius: 8px; }
+.hidden { display: none !important; }
+
+/* ---------- motion ---------- */
+@keyframes waypoint-in { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+@keyframes gate-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes breathe { 0%,100% { opacity: 1; box-shadow: 0 0 10px currentColor; } 50% { opacity: 0.4; box-shadow: 0 0 3px currentColor; } }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

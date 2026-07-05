@@ -1,0 +1,14 @@
+# Backend dependencies for the LangMonitor on-device browser agent.
+# Everything here runs locally; the only "model" dependency is a running Ollama.
+
+fastapi>=0.110
+uvicorn[standard]>=0.29
+playwright>=1.44
+
+# LangGraph agent graph. Needs interrupt(), Command, and get_stream_writer.
+langgraph>=0.2.60
+langgraph-checkpoint>=1.0.0
+
+# Local LLM via Ollama (OpenAI-compatible / native). No cloud calls.
+langchain-ollama>=0.2.0
+langchain-core>=0.3.0

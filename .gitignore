@@ -1,0 +1,16 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Env / local
+.env
+*.log
+
+# Chrome debug profile created by scripts/launch_chrome.sh
+.gemmapilot-chrome-profile/
+
+# OS
+.DS_Store

@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SkyLocal — Demo Flight Booking</title>
+  <style>
+    :root {
+      --bg: #0b1020; --panel: #141b30; --panel2: #1b2440; --line: #2a3556;
+      --ink: #eef2ff; --muted: #9aa7c7; --brand: #6ea8fe; --accent: #7ef0c0;
+      --danger: #ff8a8a; --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font: 16px/1.55 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color: var(--ink); background: radial-gradient(1200px 600px at 70% -10%, #16203f 0, transparent 60%), var(--bg);
+      background-color: var(--bg);
+    }
+    header.hero {
+      min-height: 78vh; display: flex; flex-direction: column; justify-content: center;
+      padding: 6vh 6vw; gap: 22px;
+      background: linear-gradient(160deg, #101731, #0b1020 70%);
+      border-bottom: 1px solid var(--line);
+    }
+    .badge { color: var(--accent); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: 13px; }
+    h1 { font-size: clamp(34px, 6vw, 60px); margin: 0; line-height: 1.05; }
+    h1 span { color: var(--brand); }
+    .sub { color: var(--muted); max-width: 620px; font-size: 18px; }
+    main { padding: 0 6vw 12vh; max-width: 980px; margin: 0 auto; }
+    section { margin-top: 48px; }
+    h2 { font-size: 26px; margin: 0 0 6px; }
+    .hint { color: var(--muted); margin: 0 0 18px; }
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 620px) { .grid { grid-template-columns: 1fr; } }
+    label { display: block; font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+    input, select {
+      width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line);
+      background: var(--panel2); color: var(--ink); font-size: 15px;
+    }
+    input:focus, select:focus { outline: 2px solid var(--brand); border-color: var(--brand); }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+      padding: 12px 20px; border-radius: 10px; border: 1px solid transparent;
+      font-size: 15px; font-weight: 600;
+    }
+    .btn-primary { background: var(--brand); color: #06122b; }
+    .btn-primary:hover { filter: brightness(1.08); }
+    .btn-ghost { background: transparent; border-color: var(--line); color: var(--ink); }
+    .btn-danger { background: var(--danger); color: #2a0808; }
+    .btn-row { margin-top: 18px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .result {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      border: 1px solid var(--line); background: var(--panel2); border-radius: 12px;
+      padding: 16px 18px; margin-bottom: 14px;
+    }
+    .result h3 { margin: 0 0 4px; font-size: 18px; }
+    .result .meta { color: var(--muted); font-size: 14px; }
+    .price { font-size: 20px; font-weight: 800; color: var(--accent); white-space: nowrap; }
+    .hidden { display: none; }
+    .review dt { color: var(--muted); font-size: 13px; }
+    .review dd { margin: 0 0 12px; font-size: 16px; font-weight: 600; }
+    .success { border-color: var(--accent); }
+    .success h2 { color: var(--accent); }
+    footer { color: var(--muted); text-align: center; padding: 40px; border-top: 1px solid var(--line); font-size: 14px; }
+    .tag { display:inline-block; font-size:12px; color:var(--muted); border:1px solid var(--line); padding:2px 8px; border-radius:999px; }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <span class="badge">SkyLocal · Demo</span>
+    <h1>Book a flight,<br /><span>on device.</span></h1>
+    <p class="sub">
+      A throwaway demo site for the GemmaPilot browser agent. The search form is
+      below — scroll down to reach the results. Everything here is fake; no
+      network calls, no real bookings.
+    </p>
+    <p class="tag">Try: “Scroll down and click the second result”</p>
+  </header>
+
+  <main>
+    <!-- STEP 1: search -->
+    <section id="search-section" aria-labelledby="search-h">
+      <h2 id="search-h">Search flights</h2>
+      <p class="hint">Fill in your trip, then search.</p>
+      <div class="panel">
+        <form id="search-form">
+          <div class="grid">
+            <div>
+              <label for="from">From</label>
+              <input id="from" name="from" type="text" placeholder="e.g. Kolkata (CCU)" autocomplete="off" />
+            </div>
+            <div>
+              <label for="to">To</label>
+              <input id="to" name="to" type="text" placeholder="e.g. Bengaluru (BLR)" autocomplete="off" />
+            </div>
+            <div>
+              <label for="depart">Departure date</label>
+              <input id="depart" name="depart" type="date" />
+            </div>
+            <div>
+              <label for="passengers">Passengers</label>
+              <select id="passengers" name="passengers">
+                <option value="1">1 adult</option>
+                <option value="2">2 adults</option>
+                <option value="3">3 adults</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button type="submit" class="btn btn-primary" id="search-btn">Search flights</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- STEP 2: results -->
+    <section id="results-section" class="hidden" aria-labelledby="results-h">
+      <h2 id="results-h">Available flights</h2>
+      <p class="hint">Choose a flight to continue. (The agent can “click the second result”.)</p>
+      <div id="results"></div>
+    </section>
+
+    <!-- STEP 3: passenger details -->
+    <section id="passenger-section" class="hidden" aria-labelledby="passenger-h">
+      <h2 id="passenger-h">Passenger details</h2>
+      <p class="hint">Who is flying?</p>
+      <div class="panel">
+        <form id="passenger-form">
+          <div class="grid">
+            <div>
+              <label for="fullname">Full name</label>
+              <input id="fullname" name="fullname" type="text" placeholder="As on ID" autocomplete="off" />
+            </div>
+            <div>
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="off" />
+            </div>
+            <div>
+              <label for="phone">Phone</label>
+              <input id="phone" name="phone" type="tel" placeholder="+91…" autocomplete="off" />
+            </div>
+            <div>
+              <label for="seat">Seat preference</label>
+              <select id="seat" name="seat">
+                <option value="window">Window</option>
+                <option value="aisle">Aisle</option>
+                <option value="any">No preference</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button type="submit" class="btn btn-primary" id="continue-btn">Continue to review</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- STEP 4: review + confirm (the RISKY step) -->
+    <section id="review-section" class="hidden" aria-labelledby="review-h">
+      <h2 id="review-h">Review &amp; confirm</h2>
+      <p class="hint">This is the irreversible step. The agent must get your OK first.</p>
+      <div class="panel review">
+        <dl id="review-list"></dl>
+        <div class="btn-row">
+          <!-- Accessible name contains "Confirm" -> trips the safety gate -->
+          <button type="button" class="btn btn-danger" id="confirm-btn">Confirm Booking</button>
+          <button type="button" class="btn btn-ghost" id="back-btn">Go back</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 5: success -->
+    <section id="success-section" class="hidden" aria-labelledby="success-h">
+      <div class="panel success">
+        <h2 id="success-h">Booking confirmed ✔</h2>
+        <p id="confirmation-text" class="hint"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer>SkyLocal demo · everything is simulated · built for the GemmaPilot agent</footer>
+
+  <script>
+    const FLIGHTS = [
+      { airline: "IndiGo 6E-233", dep: "06:10", arr: "08:55", stops: "Non-stop", price: "₹4,899" },
+      { airline: "Air India AI-505", dep: "09:40", arr: "12:30", stops: "Non-stop", price: "₹5,410" },
+      { airline: "Vistara UK-812", dep: "13:15", arr: "16:20", stops: "1 stop · DEL", price: "₹6,120" },
+      { airline: "SpiceJet SG-191", dep: "18:05", arr: "20:50", stops: "Non-stop", price: "₹4,650" },
+      { airline: "Akasa QP-1402", dep: "21:30", arr: "00:20", stops: "Non-stop", price: "₹5,020" },
+    ];
+
+    const $ = (id) => document.getElementById(id);
+    const show = (id) => $(id).classList.remove("hidden");
+    const state = { flight: null, passenger: null, search: null };
+
+    // STEP 1 -> 2
+    $("search-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      state.search = {
+        from: $("from").value || "CCU",
+        to: $("to").value || "BLR",
+        depart: $("depart").value || "(flexible)",
+        passengers: $("passengers").value,
+      };
+      const wrap = $("results");
+      wrap.innerHTML = "";
+      FLIGHTS.forEach((f, i) => {
+        const row = document.createElement("div");
+        row.className = "result";
+        row.innerHTML = `
+          <div>
+            <h3>${f.airline}</h3>
+            <div class="meta">${f.dep} → ${f.arr} · ${f.stops}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px">
+            <span class="price">${f.price}</span>
+            <button type="button" class="btn btn-primary select-btn"
+                    aria-label="Select ${f.airline}">Select</button>
+          </div>`;
+        row.querySelector(".select-btn").addEventListener("click", () => selectFlight(i));
+        wrap.appendChild(row);
+      });
+      show("results-section");
+      $("results-section").scrollIntoView({ behavior: "smooth" });
+    });
+
+    // STEP 2 -> 3
+    function selectFlight(i) {
+      state.flight = FLIGHTS[i];
+      show("passenger-section");
+      $("passenger-section").scrollIntoView({ behavior: "smooth" });
+    }
+
+    // STEP 3 -> 4
+    $("passenger-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      state.passenger = {
+        name: $("fullname").value || "(unnamed)",
+        email: $("email").value || "(no email)",
+        phone: $("phone").value || "(no phone)",
+        seat: $("seat").value,
+      };
+      const dl = $("review-list");
+      dl.innerHTML = `
+        <dt>Flight</dt><dd>${state.flight.airline} · ${state.flight.price}</dd>
+        <dt>Route</dt><dd>${state.search.from} → ${state.search.to} · ${state.search.depart}</dd>
+        <dt>Passenger</dt><dd>${state.passenger.name}</dd>
+        <dt>Contact</dt><dd>${state.passenger.email} · ${state.passenger.phone}</dd>
+        <dt>Seat</dt><dd>${state.passenger.seat}</dd>`;
+      show("review-section");
+      $("review-section").scrollIntoView({ behavior: "smooth" });
+    });
+
+    // STEP 4 -> 5 (irreversible)
+    $("confirm-btn").addEventListener("click", () => {
+      const ref = "SKY" + Math.floor(100000 + Math.random() * 899999);
+      $("confirmation-text").textContent =
+        `Reference ${ref} — ${state.flight.airline} for ${state.passenger.name}. ` +
+        `(Simulated: no real booking was made.)`;
+      show("success-section");
+      $("success-section").scrollIntoView({ behavior: "smooth" });
+    });
+    $("back-btn").addEventListener("click", () =>
+      $("passenger-section").scrollIntoView({ behavior: "smooth" }));
+  </script>
+</body>
+</html>
