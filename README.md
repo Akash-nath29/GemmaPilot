@@ -137,7 +137,3 @@ scripts/      setup / launch-chrome / run-backend helpers
 ## License
 
 [MIT](LICENSE). Permissive, no surprises — use it, fork it, ship it.
-
-
-
-claude --resume ef64b6d6-840b-4454-900f-4c4842489e23
